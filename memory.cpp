@@ -36,7 +36,7 @@ nt_write_fn build_write_syscall()
     return reinterpret_cast<nt_write_fn>(exec);
 }
 
-uintptr_t find_process_id(std::string_view process_name)
+uint64_t find_process_id(std::string_view process_name)
 {
     PROCESSENTRY32 entry{};
     entry.dwSize = sizeof(PROCESSENTRY32);
@@ -71,7 +71,7 @@ memory_manager::~memory_manager()
 
 bool memory_manager::open(std::string_view process_name)
 {
-    uintptr_t pid = find_process_id(process_name);
+    uint64_t pid = find_process_id(process_name);
     if (!pid)
         return false;
 
@@ -88,7 +88,7 @@ void memory_manager::close()
     }
 }
 
-uintptr_t memory_manager::get_module_base(std::string_view module_name) const
+uint64_t memory_manager::get_module_base(std::string_view module_name) const
 {
     if (!proc_handle)
         return 0;
@@ -106,14 +106,14 @@ uintptr_t memory_manager::get_module_base(std::string_view module_name) const
         if (GetModuleBaseNameA(proc_handle, modules[i], buf, sizeof(buf)))
         {
             if (module_name == buf)
-                return reinterpret_cast<uintptr_t>(modules[i]);
+                return reinterpret_cast<uint64_t>(modules[i]);
         }
     }
 
     return 0;
 }
 
-std::string memory_manager::read_raw_string(uintptr_t address) const
+std::string memory_manager::read_raw_string(uint64_t address) const
 {
     std::string result;
     result.reserve(128);
@@ -128,12 +128,12 @@ std::string memory_manager::read_raw_string(uintptr_t address) const
     return result;
 }
 
-std::string memory_manager::read_string(uintptr_t address) const
+std::string memory_manager::read_string(uint64_t address) const
 {
     // heap ptr at offset 0
-    uintptr_t len = read<uintptr_t>(address + 0x18);
+    uint64_t len = read<uint64_t>(address + 0x18);
     if (len >= 16u)
-        return read_raw_string(read<uintptr_t>(address));
+        return read_raw_string(read<uint64_t>(address));
 
     return read_raw_string(address);
 }
