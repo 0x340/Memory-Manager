@@ -11,7 +11,7 @@ using nt_write_fn = NTSTATUS(WINAPI*)(HANDLE, PVOID, PVOID, ULONG, PULONG);
 nt_read_fn  build_read_syscall();
 nt_write_fn build_write_syscall();
 
-uintptr_t find_process_id(std::string_view process_name);
+uint64_t find_process_id(std::string_view process_name);
 
 class memory_manager
 {
@@ -24,7 +24,7 @@ public:
     bool open(std::string_view process_name);
     void close();
 
-    uintptr_t get_module_base(std::string_view module_name) const;
+    uint64_t get_module_base(std::string_view module_name) const;
 
     template<typename T>
     T read(uintptr_t address) const
