@@ -2,7 +2,6 @@
 
 This Project is a self contained Windows memory manager written in C++. It reads and writes memory in an external process using raw syscall stubs instead of going through ntdll, which means it works even when ntdll is hooked.
 
----
 
 ## File Content
 
@@ -11,7 +10,7 @@ This Project is a self contained Windows memory manager written in C++. It reads
 | `memory.hpp` | Class declaration + read/write |
 | `memory.cpp` | Syscall stubs, process helpers, string reading |
 
----
+
 
 ## How to use it
 
@@ -63,7 +62,6 @@ uintptr_t base = mem.get_module_base("client.exe");
 std::string name = mem.read_string(address);
 ```
 
----
 
 ## How the syscall stubs work
 
@@ -80,7 +78,6 @@ The stubs are allocated as executable memory with `VirtualAlloc` and cast to fun
 
 > **Note:** The syscall numbers (`0x3F` read, `0x3A` write) are for **Win 10 / Win 11** only if you use any other version you have update them
 
----
 
 ## Requirements
 
@@ -88,7 +85,6 @@ The stubs are allocated as executable memory with `VirtualAlloc` and cast to fun
 - C++ 17
 - Link against `Psapi.lib`
 
----
 
 ## Notes
 
