@@ -37,16 +37,16 @@ if (!mem.open("client.exe"))
 ```cpp
 // read any type you want
 float <name> = mem.read<float>(offset);
-int <name> = mem.read<int>(base + offset);
-bool <name> = mem.read<bool>(base + offset);
+int <name> = mem.read<int>(address + offset);
+bool <name> = mem.read<bool>(address + offset);
 ```
 
 ### 4. Write memory
 
 ```cpp
 mem.write<float>(offset, value);
-mem.write<int>(base + offset, value);
-mem.write<bool>(base + offset, value);
+mem.write<int>(address + offset, value);
+mem.write<bool>(address + offset, value);
 ```
 
 ### 5. Get a module base address
