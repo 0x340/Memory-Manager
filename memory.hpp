@@ -28,12 +28,12 @@ namespace mm
                 ~memory_manager( );
 
                 //helper fn
-                HANDLE          get_handle( );
-                bool            open( std::string_view process_name );
-                void            close( );
-                std::uintptr_t  get_module_base( std::string_view module_name ) const;
-                std::string     read_string( std::uintptr_t address ) const;
-                void            write_string( std::uintptr_t address, std::string_view value ) const;
+                HANDLE get_handle( );
+                bool open( std::string_view process_name );
+                void close( );
+                std::uintptr_t get_module_base( std::string_view module_name ) const;
+                std::string read_string( std::uintptr_t address ) const;
+                void write_string( std::uintptr_t address, std::string_view value ) const;
 
                 template<typename T>
                 T read( std::uintptr_t address ) const
