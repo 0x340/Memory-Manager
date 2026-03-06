@@ -1,151 +1,143 @@
 #include "memory.hpp"
 #include <stdexcept>
 
-auto mm::internal::build_read_syscall() -> nt_read_fn
+nt_read_fn mm::internal::build_read_syscall( )
     {
-    return [ ] ( ) -> nt_read_fn
-        {
-        static constexpr std::array<uint8_t, 11> stub = {
-            0x4C, 0x8B, 0xD1,
-            0xB8, 0x3F, 0x00, 0x00, 0x00, 
-            0x0F, 0x05,
-            0xC3
-            };
+    static constexpr std::array<uint8_t, 11> stub = {
+        0x4C, 0x8B, 0xD1,
+        0xB8, 0x3F, 0x00, 0x00, 0x00,
+        0x0F, 0x05,
+        0xC3
+        };
 
-        void *exec = VirtualAlloc ( nullptr, stub.size ( ), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE );
-        if ( !exec )
-             throw std::runtime_error ( std::format ( "[mm] VirtualAlloc failure @ {}:{}", __FILE__, __LINE__ ) );
+    void* exec = VirtualAlloc( nullptr, stub.size( ), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE );
+    if ( !exec )
+        throw std::runtime_error( std::format( "[mm] VirtualAlloc failure @ {}:{}", __FILE__, __LINE__ ) );
 
-        std::memcpy ( exec, stub.data ( ), stub.size ( ) );
-        return reinterpret_cast< nt_read_fn >( exec );
-        }( );
+    std::memcpy( exec, stub.data( ), stub.size( ) );
+    return reinterpret_cast<nt_read_fn>( exec );
     }
 
-auto mm::internal::build_write_syscall ( ) -> nt_write_fn
+nt_write_fn mm::internal::build_write_syscall( )
     {
-    return [ ] ( ) -> nt_write_fn
-        {
-        static constexpr std::array<uint8_t, 11> stub = {
-            0x4C, 0x8B, 0xD1,
-            0xB8, 0x3A, 0x00, 0x00, 0x00,
-            0x0F, 0x05,
-            0xC3
-            };
+    static constexpr std::array<uint8_t, 11> stub = {
+        0x4C, 0x8B, 0xD1,
+        0xB8, 0x3A, 0x00, 0x00, 0x00,
+        0x0F, 0x05,
+        0xC3
+        };
 
-        void *exec = VirtualAlloc ( nullptr, stub.size ( ), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE );
-        if ( !exec )
-            throw std::runtime_error ( std::format ( "[mm] VirtualAlloc failure at {}:{}", __FILE__, __LINE__ ) );
+    void* exec = VirtualAlloc( nullptr, stub.size( ), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE );
+    if ( !exec )
+        throw std::runtime_error( std::format( "[mm] VirtualAlloc failure @ {}:{}", __FILE__, __LINE__ ) );
 
-        std::memcpy ( exec, stub.data ( ), stub.size ( ) );
-        return reinterpret_cast< nt_write_fn >( exec );
-        }( );
+    std::memcpy( exec, stub.data( ), stub.size( ) );
+    return reinterpret_cast<nt_write_fn>( exec );
     }
 
-auto mm::internal::find_process_id ( std::string_view process_name ) -> std::uintptr_t
+std::uintptr_t mm::internal::find_process_id( std::string_view process_name )
     {
-    return [&process_name ] ( ) -> std::uintptr_t
-        {
-        PROCESSENTRY32 entry { .dwSize = sizeof ( PROCESSENTRY32 ) };
-        const auto snap = std::unique_ptr<std::remove_pointer_t<HANDLE>, decltype( &CloseHandle )> {
-            CreateToolhelp32Snapshot ( TH32CS_SNAPPROCESS, 0 ), CloseHandle
-            };
-        if ( !Process32First ( snap.get ( ), &entry ) )  
-            return 0;
-        while ( Process32Next ( snap.get ( ), &entry ) )
-            {
-            if ( process_name == entry.szExeFile )
-                return entry.th32ProcessID;
-            }
+    PROCESSENTRY32 entry { .dwSize = sizeof( PROCESSENTRY32 ) };
+
+    const std::unique_ptr<std::remove_pointer_t<HANDLE>, decltype( &CloseHandle )> snap {
+        CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 ), CloseHandle
+        };
+
+    if ( !Process32First( snap.get( ), &entry ) )
         return 0;
-        }( );
-    }
 
-mm::internal::memory_manager::memory_manager ( )
-{
-    m_read = build_read_syscall ( );
-    m_write = build_write_syscall ( );
-}
-
-mm::internal::memory_manager::~memory_manager()
-{
-    this->close ( );
-}
-
-auto mm::internal::memory_manager::open ( std::string_view process_name ) -> bool
-    {
-    return [this, &process_name ] ( ) -> bool
+    while ( Process32Next( snap.get( ), &entry ) )
         {
-        const std::uintptr_t pid = find_process_id ( process_name );
-        if ( !pid ) return false;
-        this->proc_handle = OpenProcess ( PROCESS_ALL_ACCESS, FALSE, static_cast< DWORD >( pid ) );
-        return this->proc_handle != nullptr;
-        }( );
+        if ( process_name == entry.szExeFile )
+            return entry.th32ProcessID;
+        }
+
+    return 0;
     }
 
-auto mm::internal::memory_manager::close ( ) -> void
+mm::internal::memory_manager::memory_manager( )
     {
-    return [this ] ( ) -> void
+    m_read  = build_read_syscall( );
+    m_write = build_write_syscall( );
+    }
+
+mm::internal::memory_manager::~memory_manager( )
+    {
+    close( );
+    }
+
+bool mm::internal::memory_manager::open( std::string_view process_name )
+    {
+    const std::uintptr_t pid = find_process_id( process_name );
+    if ( !pid ) return false;
+
+    proc_handle = OpenProcess( PROCESS_ALL_ACCESS, FALSE, static_cast<DWORD>( pid ) );
+    return proc_handle != nullptr;
+    }
+
+void mm::internal::memory_manager::close( )
+    {
+    if ( !proc_handle ) return;
+    CloseHandle( proc_handle );
+    proc_handle = nullptr;
+    }
+
+std::uintptr_t mm::internal::memory_manager::get_module_base( std::string_view module_name ) const
+    {
+    if ( !proc_handle ) return 0;
+
+    std::array<HMODULE, 1024> modules {};
+    DWORD bytes_needed = 0;
+
+    if ( !EnumProcessModules( proc_handle, modules.data( ), sizeof( modules ), &bytes_needed ) )
+        return 0;
+
+    const std::size_t count = bytes_needed / sizeof( HMODULE );
+
+    const auto it = std::find_if( modules.begin( ), modules.begin( ) + count, [&]( HMODULE mod )
         {
-        if ( !this->proc_handle ) return;
-        CloseHandle ( this->proc_handle );
-        this->proc_handle = nullptr;
-        }( );
+        std::array<char, MAX_PATH> buf {};
+        return GetModuleBaseNameA( proc_handle, mod, buf.data( ), buf.size( ) ) && module_name == buf.data( );
+        } );
+
+    return it != modules.begin( ) + count ? reinterpret_cast<std::uintptr_t>( *it ) : 0;
     }
 
-auto mm::internal::memory_manager::get_module_base ( std::string_view module_name ) const -> std::uintptr_t
+std::string mm::internal::memory_manager::read_raw_string( std::uintptr_t address ) const
     {
-    return [this, &module_name ] ( ) -> std::uintptr_t
+    std::string result {};
+    result.reserve( 128 );
+
+    for ( int i = 0; i < 200; ++i )
         {
-        if ( !this->proc_handle )
-            return 0;
+        const char c = read<char>( address + i );
+        if ( c == '\0' ) break;
+        result += c;
+        }
 
-        std::array<HMODULE, 1024> modules {};
-        DWORD bytes_needed = 0;
-        if ( !EnumProcessModules ( this->proc_handle, modules.data ( ), sizeof ( modules ), &bytes_needed ) )
-            return 0;
-
-        const auto count = bytes_needed / sizeof ( HMODULE );
-        const auto it = std::find_if ( modules.begin ( ), modules.begin ( ) + count, [ & ] ( HMODULE mod )
-                                       {
-                                       std::array<char, MAX_PATH> buf {};
-                                       return GetModuleBaseNameA ( this->proc_handle, mod, buf.data ( ), buf.size ( ) ) && module_name == buf.data ( );
-                                       } );
-        return it != modules.begin ( ) + count ? reinterpret_cast< std::uintptr_t >( *it ) : 0;
-        }( ); // vs i love u so much, that auto formatting is just beautiful :heart:
+    return result;
     }
 
-auto mm::internal::memory_manager::read_raw_string ( std::uintptr_t address ) const -> std::string
+std::string mm::internal::memory_manager::read_string( std::uintptr_t address ) const
     {
-    return [this, &address ] ( ) -> std::string
-        {
-        std::string result {};
-        result.reserve ( 128 );
-        for ( int i = 0; i < 200; ++i )
-            {
-            const char c = this->read<char> ( address + i );
-            if ( c == '\0' ) break;
-            result += c;
-            }
-        return result;
-        }( );
+    const bool is_heap = read<std::uintptr_t>( address + 0x18 ) >= 16u;
+    return read_raw_string( is_heap ? read<std::uintptr_t>( address ) : address );
     }
 
-auto mm::internal::memory_manager::read_string ( std::uintptr_t address ) const -> std::string
+void mm::internal::memory_manager::write_string( std::uintptr_t address, std::string_view value ) const
     {
-    return [ this, &address] ( ) -> std::string {
-        const bool is_heap = this->read<std::uintptr_t> ( address + 0x18 ) >= 16u;
-        return this->read_raw_string ( is_heap ? this->read<std::uintptr_t> ( address ) : address );
-        }( );
+    const bool is_heap             = read<std::uintptr_t>( address + 0x18 ) >= 16u;
+    const std::uintptr_t target    = is_heap ? read<std::uintptr_t>( address ) : address;
+
+    for ( std::size_t i = 0; i < value.size( ); ++i )
+        write<char>( target + i, value[ i ] );
+
+    write<char>( target + value.size( ), '\0' );
     }
 
-//helper fn
-
-auto mm::internal::memory_manager::get_handle ( ) -> HANDLE
+HANDLE mm::internal::memory_manager::get_handle( )
     {
-    return [this ] ( ) -> HANDLE
-        {
-        return this->proc_handle;
-        }( );
+    return proc_handle;
     }
 
-std::shared_ptr<mm::internal::memory_manager> mm::g_mm = std::make_shared<mm::internal::memory_manager>();
+std::shared_ptr<mm::internal::memory_manager> mm::g_mm = std::make_shared<mm::internal::memory_manager>( );
