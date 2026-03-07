@@ -52,7 +52,3 @@ The stubs are allocated as executable memory with `VirtualAlloc` and cast to fun
 - Windows 10/11 (x64)
 - C++ 17
 - Link against `Psapi.lib`
-## Notes
-- The process handle is cleaned up automatically when `memory_manager` goes out.
-- `read_string` handles the SSO layout used by MSVC's `std::string`  strings under 16 characters are stored inline longer ones store a pointer to heap memory at offset `0x0`.
-- `find_process_id` is exposed as a free function if you need the PID separately.
