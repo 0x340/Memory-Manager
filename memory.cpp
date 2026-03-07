@@ -57,13 +57,13 @@ std::uintptr_t mm::internal::find_process_id( std::string_view process_name )
 
 mm::internal::memory_manager::memory_manager( )
     {
-    m_read  = build_read_syscall( );
-    m_write = build_write_syscall( );
+        m_read  = build_read_syscall( );
+        m_write = build_write_syscall( );
     }
 
 mm::internal::memory_manager::~memory_manager( )
     {
-    close( );
+        close( );
     }
 
 bool mm::internal::memory_manager::open( std::string_view process_name )
@@ -114,7 +114,6 @@ std::string mm::internal::memory_manager::read_raw_string( std::uintptr_t addres
         if ( c == '\0' ) break;
         result += c;
         }
-
     return result;
     }
 
@@ -126,7 +125,7 @@ std::string mm::internal::memory_manager::read_string( std::uintptr_t address ) 
 
 void mm::internal::memory_manager::write_string( std::uintptr_t address, std::string_view value ) const
     {
-    const bool is_heap          = read<std::uintptr_t>( address + 0x18 ) >= 16u;
+    const bool is_heap = read<std::uintptr_t>( address + 0x18 ) >= 16u;
     const std::uintptr_t target = is_heap ? read<std::uintptr_t>( address ) : address;
 
     for ( std::size_t i = 0; i < value.size( ); ++i )
