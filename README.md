@@ -37,16 +37,7 @@ mm::g_mm->write_string(address + offset, "value");
 ```cpp
 uintptr_t base = mm::g_mm->get_module_base("client.exe");
 ```
-### 6. Read a string
-```cpp
-// handles SSO and heap-allocated strings
-std::string <name> = mm::g_mm->read_string(address + offset);
-```
-### 7. Write a string
-```cpp
-// handles SSO and heap-allocated strings
-mm::g_mm->write_string(address + offset, "value");
-```
+
 ## How the syscall stubs work
 Instead of calling `ReadProcessMemory` / `WriteProcessMemory`  this manager builds a assembly stubs at runtime and calls the NT kernel directly.
 ```
