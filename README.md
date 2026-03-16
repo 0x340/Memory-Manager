@@ -1,54 +1,24 @@
 # Memory Manager
-This Project is a self contained Windows memory manager written in C++. It reads and writes memory in an external process using raw syscall stubs instead of going through ntdll, which means it works even when ntdll is hooked.
+
+This project is a self-contained Windows memory manager written in C++. It reads and writes memory in an external process using raw syscall stubs instead of going through `ntdll`, which means it works even when `ntdll` is hooked.
+
 ## File Content
+
 | File | Content |
 |---|---|
 | `memory.hpp` | Class declaration + read/write |
 | `memory.cpp` | Syscall stubs, process helpers, string reading |
+
 ## How to use it
+
 ### 1. Add the files to your project
 Just copy `memory.hpp` and `memory.cpp` into your project and include the header wherever you need it.
+
 ### 2. Open a process
 ```cpp
 #include "memory.hpp"
-mm::g_mm->open("client.exe");
-if (!mm::g_mm->open("client.exe"))
-{
-    // returns if proccess isnt avalible or couldnt get a handle
+
+if (!mm::g_mm->open("client.exe")) {
+    // Returns if process isn't available or couldn't get a handle
     return 1;
 }
-```
-### 3. Read memory
-```cpp
-// read any type you want
-float <name> = mm::g_mm->read<float>(address + offset);
-int <name> = mm::g_mm->read<int>(address + offset);
-bool <name> = mm::g_mm->read<bool>(address + offset);
-std::string <name> = mm::g_mm->read_string(address + offset);
-```
-### 4. Write memory
-```cpp
-mm::g_mm->write<float>(address + offset, value);
-mm::g_mm->write<int>(address + offset, value);
-mm::g_mm->write<bool>(address + offset, value);
-mm::g_mm->write_string(address + offset, "value");
-```
-### 5. Get a module base address
-```cpp
-uintptr_t base = mm::g_mm->get_module_base("client.exe");
-```
-
-## How the syscall stubs work
-Instead of calling `ReadProcessMemory` / `WriteProcessMemory`  this manager builds a assembly stubs at runtime and calls the NT kernel directly.
-```
-mov r10, rcx; required for syscalls on x64
-mov eax, 0x3F; number for NtReadVirtualMemory
-syscall
-ret
-```
-The stubs are allocated as executable memory with `VirtualAlloc` and cast to function pointers.
-> **Note:** The syscall numbers (`0x3F` read, `0x3A` write) are for **Win 10 / Win 11** only if you use any other version you have update them
-## Requirements
-- Windows 10/11 (x64)
-- C++ 17
-- Link against `Psapi.lib`
