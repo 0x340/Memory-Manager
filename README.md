@@ -1,6 +1,6 @@
 # Memory Manager
 
-This project is a self-contained Windows memory manager written in C++. It reads and writes memory in an external process using raw syscall stubs instead of going through `ntdll`, which means it works even when `ntdll` is hooked.
+This project is a self-contained Windows memory manager written in C++. It reads and writes memory in an external process using raw syscall stubs instead of going through `ntdll`, which means it works even when `ntdll` is hooked
 
 ## File Content
 
@@ -12,7 +12,7 @@ This project is a self-contained Windows memory manager written in C++. It reads
 ## How to use it
 
 ### 1. Add the files to your project
-Just copy `memory.hpp` and `memory.cpp` into your project and include the header wherever you need it.
+Just copy `memory.hpp` and `memory.cpp` into your project and include the header wherever you need it
 
 ### 2. Open a process and use memory
 ```cpp
