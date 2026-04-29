@@ -44,24 +44,29 @@ nt_write_fn mm::internal::build_write_syscall()
 
 std::uintptr_t mm::internal::find_process_id(std::string_view process_name)
 {
-    PROCESSENTRY32 entry { .dwSize = sizeof(PROCESSENTRY32) };
+    PROCESSENTRY32 entry{};
+    entry.dwSize = sizeof(PROCESSENTRY32);
     //
-    const std::unique_ptr<std::remove_pointer_t<HANDLE>, decltype(&CloseHandle)> snap 
+    const std::unique_ptr<std::remove_pointer_t<HANDLE>, decltype(&CloseHandle)> snap
     {
-        CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0), CloseHandle
+        CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0), CloseHandle 
     };
     //
-    if (!Process32First(snap.get(),&entry))
+    if (snap.get() == INVALID_HANDLE_VALUE)
         //
         return 0;
 
-    while (Process32Next(snap.get(), &entry))
+    if (Process32First(snap.get(), &entry))
+    {
+        do
         {
-        if (process_name == entry.szExeFile)
-            //
-            return entry.th32ProcessID;
-        }
-        //
+            if (_stricmp(entry.szExeFile, process_name.data()) == 0)
+                //
+                return entry.th32ProcessID;
+
+        } while (Process32Next(snap.get(), &entry));
+    }
+    //
     return 0;
 }
 
