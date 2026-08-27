@@ -8,9 +8,9 @@ This is a memory manager I made in C++. It is currently Windows 10 only if you u
 #include "memory.hpp"
 
 // open process
-if (!mm::g_mm->open("client.exe")) {
-    // returns if the process is dead 
-    return 1;
+if (!mm::g_mm->open("client.exe"))
+{
+    return 1; // returns if the process is dead 
 }
 
 // reading
@@ -18,7 +18,7 @@ if (!mm::g_mm->open("client.exe")) {
 std::string <name> = mm::g_mm->read_string(address);
 
 // writing
-mm::g_mm->write<<Type>>(address, value);
+mm::g_mm->write<<type>>(address, value);
 mm::g_mm->write_string(address, "<value>");
 
 // module base
