@@ -1,6 +1,6 @@
 # Memory Manager
 
-this is a memory manager I made in C++. It is currently Windows 10 only if you use any other version you have to update the syscalls for NT read & write memory. It reads and writes memory in an external process using raw syscall stubs instead of going through `ntdll`, which means it works even when `ntdll` is hooked
+This is a memory manager I made in C++. It is currently Windows 10 only if you use any other version you have to update the syscalls for NT read & write memory. It reads and writes memory in an external process using raw syscall stubs instead of going through `ntdll`, which means it works even when `ntdll` is hooked
 
 
 ### quick guide
