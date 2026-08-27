@@ -73,7 +73,7 @@ std::uintptr_t mm::internal::find_process_id(std::string_view process_name)
         while (Process32Next(snap.get(), &entry));
     }
     //
-    return 0;
+    return 0; // returns 0 if not found
 }
 
 mm::internal::memory_manager::memory_manager()
@@ -84,7 +84,7 @@ mm::internal::memory_manager::memory_manager()
 
 mm::internal::memory_manager::~memory_manager()
 {
-    close();
+    close(); // closes handle on exit
 }
 
 bool mm::internal::memory_manager::open(std::string_view process_name)
@@ -93,10 +93,10 @@ bool mm::internal::memory_manager::open(std::string_view process_name)
     //
     if (!pid)
     {
-        return false;
+        return false; // returns true on success
     }
     //
-    proc_handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, static_cast<DWORD>(pid));
+    proc_handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, static_cast<DWORD>(pid)); // full access
     //
     return proc_handle != nullptr;
 }
@@ -107,7 +107,7 @@ void mm::internal::memory_manager::close()
     {
         return;
     }
-    CloseHandle(proc_handle);
+    CloseHandle(proc_handle); // closes the current handle
     //
     proc_handle = nullptr;
 }
@@ -126,7 +126,7 @@ std::uintptr_t mm::internal::memory_manager::get_module_base(std::string_view mo
     {
          return 0;
     }
-
+    //
     const std::size_t count = bytes_needed / sizeof(HMODULE);
     const auto it = std::find_if(modules.begin(), modules.begin() + count, [&](HMODULE mod)
     {
@@ -135,7 +135,7 @@ std::uintptr_t mm::internal::memory_manager::get_module_base(std::string_view mo
         return GetModuleBaseNameA(proc_handle, mod, buf.data(), buf.size()) && module_name == buf.data();
     });
     //
-    return it != modules.begin() + count ? reinterpret_cast<std::uintptr_t>(*it) : 0;
+    return it != modules.begin() + count ? reinterpret_cast<std::uintptr_t>(*it) : 0; // returns the base address via a module
 }
 
 std::string mm::internal::memory_manager::read_raw_string(std::uintptr_t address) const
@@ -143,7 +143,7 @@ std::string mm::internal::memory_manager::read_raw_string(std::uintptr_t address
     std::string result {};
     result.reserve(128);
     //
-    for (int i = 0; i < 200; ++i)
+    for (int i = 0; i < 200; ++i) // up to 200 chars
     {
         const char c = read<char>(address + i);
         //
@@ -159,14 +159,14 @@ std::string mm::internal::memory_manager::read_raw_string(std::uintptr_t address
 
 std::string mm::internal::memory_manager::read_string(std::uintptr_t address) const
 {
-    const bool is_heap = read<std::uintptr_t>(address + 0x18) >= 16u;
+    const bool is_heap = read<std::uintptr_t>(address + 0x18) >= 16u; // checks capacity via 0x18 and if >= 16 then its on the heap 
     //
     return read_raw_string(is_heap ? read<std::uintptr_t>(address) : address);
 }
 
 void mm::internal::memory_manager::write_string(std::uintptr_t address, std::string_view value) const
 {
-    const bool is_heap = read<std::uintptr_t>(address + 0x18) >= 16u;
+    const bool is_heap = read<std::uintptr_t>(address + 0x18) >= 16u; // same heap check as in read string
     const std::uintptr_t target = is_heap ? read<std::uintptr_t>(address) : address;
 
     for (std::size_t i = 0; i < value.size(); ++i)
@@ -174,14 +174,15 @@ void mm::internal::memory_manager::write_string(std::uintptr_t address, std::str
         write<char>(target + i, value[i]);
     }
     //
-    write<char>(target + value.size(), '\0');
+    write<char>(target + value.size(), '\0'); // writes the string 
 }
 
-//helper fn
+// helper fn
 HANDLE mm::internal::memory_manager::get_handle()
 {
-    return proc_handle;
+    return proc_handle; // retunrs raw proccess handle
 }
 
-std::shared_ptr<mm::internal::memory_manager> mm::g_mm = std::make_shared<mm::internal::memory_manager>(); // vs i love u so much that auto formatting is just beautiful :heart:
+
+std::shared_ptr<mm::internal::memory_manager> mm::g_mm = std::make_shared<mm::internal::memory_manager>(); // shared instance
 
