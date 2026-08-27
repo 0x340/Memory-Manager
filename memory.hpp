@@ -1,4 +1,5 @@
 #pragma once
+
 #include <Windows.h>
 #include <TlHelp32.h>
 #include <Psapi.h>
@@ -7,15 +8,15 @@
 #include <array>
 #include <memory>
 #include <format>
-//
+
 using nt_read_fn  = NTSTATUS(WINAPI*)(HANDLE, PVOID, PVOID, ULONG, PULONG);
 using nt_write_fn = NTSTATUS(WINAPI*)(HANDLE, PVOID, PVOID, ULONG, PULONG);
-//
+
 namespace mm
 {
     namespace internal
     {
-        nt_read_fn  build_read_syscall();
+        nt_read_fn build_read_syscall();
         nt_write_fn build_write_syscall();
         //
         std::uintptr_t find_process_id(std::string_view process_name);
@@ -28,7 +29,7 @@ namespace mm
                 memory_manager();
                 ~memory_manager();
 
-                //helper fn
+                // helper fn
                 HANDLE get_handle();
                 bool open(std::string_view process_name);
                 void close();
@@ -52,7 +53,7 @@ namespace mm
                 {
                     m_write(proc_handle, reinterpret_cast<PVOID>(address), &value, sizeof(T), nullptr);
                 }
-
+                //
             private:
                 nt_read_fn  m_read  = nullptr;
                 nt_write_fn m_write = nullptr;
@@ -60,5 +61,6 @@ namespace mm
                 std::string read_raw_string(std::uintptr_t address) const;
             };
         }
+        //
     extern std::shared_ptr<internal::memory_manager> g_mm;
 }
