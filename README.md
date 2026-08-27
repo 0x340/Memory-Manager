@@ -7,9 +7,9 @@ This is a memory manager I made in C++. It is currently Windows 10 only if you u
 ```cpp
 #include "memory.hpp"
 
-// Open process
+// open process
 if (!mm::g_mm->open("client.exe")) {
-    // returns if the process is not available 
+    // returns if the process is dead 
     return 1;
 }
 
