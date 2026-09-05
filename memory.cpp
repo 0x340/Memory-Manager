@@ -1,4 +1,5 @@
 #include "memory.hpp"
+
 #include <stdexcept>
 #include <winternl.h>
 #include <psapi.h>
@@ -160,7 +161,7 @@ namespace mm
 
         const std::size_t count = bytes_needed / sizeof(HMODULE);
 
-        const auto it = std::find_if(modules.begin(), modules.begin() + count, [&](HMODULE mod)
+        const std::array<HMODULE, 1024>::iterator it = std::find_if(modules.begin(), modules.begin() + count, [&](HMODULE mod)
         {
             std::array<char, MAX_PATH> buf{};
             //
