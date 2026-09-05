@@ -24,7 +24,7 @@ namespace mm
             static constexpr std::array<uint8_t, 11> stub =
             {
                 0x4C, 0x8B, 0xD1,
-                0xB8, 0x3F, 0x00, 0x00, 0x00,
+                0xB8, 0x3F, 0x00, 0x00, 0x00, // NtReadVirtualMemory
                 0x0F, 0x05,
                 0xC3
             };
@@ -48,7 +48,7 @@ namespace mm
             static constexpr std::array<uint8_t, 11> stub =
             {
                 0x4C, 0x8B, 0xD1,
-                0xB8, 0x3A, 0x00, 0x00, 0x00,
+                0xB8, 0x3A, 0x00, 0x00, 0x00, // NtWriteVirtualMemory
                 0x0F, 0x05,
                 0xC3
             };
