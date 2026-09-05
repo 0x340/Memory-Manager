@@ -13,14 +13,12 @@ namespace mm
 {
     namespace helper
     {
-
         HANDLE g_proc_handle = nullptr;
         nt_read_fn  g_read_syscall  = nullptr;
         nt_write_fn g_write_syscall = nullptr;
 
         nt_read_fn build_read_syscall()
         {
-
             static constexpr std::array<uint8_t, 11> stub =
             {
                 0x4C, 0x8B, 0xD1,
@@ -34,7 +32,6 @@ namespace mm
             if (!exec)
             {
                 throw std::runtime_error(std::format("[mm] VirtualAlloc failure @ {}:{}", __FILE__, __LINE__));
-
             }
 
             std::memcpy(exec, stub.data(), stub.size());
@@ -44,7 +41,6 @@ namespace mm
 
         nt_write_fn build_write_syscall()
         {
-
             static constexpr std::array<uint8_t, 11> stub =
             {
                 0x4C, 0x8B, 0xD1,
@@ -68,24 +64,24 @@ namespace mm
         std::uintptr_t get_peb()
         {
             HANDLE h = g_proc_handle;
-            
+
             if (!h)
             {
                 return {0};
             }
-        
+
             PROCESS_BASIC_INFORMATION pbi{};
             ULONG return_len = 0;
             NTSTATUS status = NtQueryInformationProcess(h, ProcessBasicInformation, &pbi, sizeof(pbi), &return_len);
-        
+
             if (!NT_SUCCESS(status))
             {
                 return {0};
             }
-        
+
             return {reinterpret_cast<std::uintptr_t>(pbi.PebBaseAddress)};
         }
-        
+
         std::uintptr_t find_process_id(std::string_view process_name)
         {
             PROCESSENTRY32 entry{};
@@ -107,13 +103,11 @@ namespace mm
                         return {entry.th32ProcessID};
                     }
                 }
-
                 while (Process32Next(snap.get(), &entry));
             }
 
             return {0};
         }
-
     } // helper
 
     bool open_process(std::string_view process_name)
@@ -159,110 +153,106 @@ namespace mm
     std::uintptr_t get_module_base(std::string_view module_name)
     {
         HANDLE h = get_process_handle();
-        
+
         if (!h)
         {
             return {0};
         }
-    
+
         std::uintptr_t peb = helper::get_peb();
-    
+
         if (!peb)
         {
             return {0};
         }
-    
+
         std::uintptr_t ldr = 0;
-    
+
         if (!read<std::uintptr_t>(peb + 0x18, ldr))
         {
             return {0};
         }
-    
+
         if (!ldr)
         {
             return {0};
         }
-    
+
         std::uintptr_t list_head = ldr + 0x10;
         std::uintptr_t flink = 0;
-    
+
         if (!read<std::uintptr_t>(list_head, flink))
         {
             return {0};
         }
-    
+
         if (!flink)
         {
             return {0};
         }
-    
+
         int wide_len = MultiByteToWideChar(CP_UTF8, 0, module_name.data(), static_cast<int>(module_name.size()), nullptr, 0);
-    
+
         if (wide_len == 0)
         {
             return {0};
         }
-    
+
         std::wstring wide_name(wide_len, L'\0');
         MultiByteToWideChar(CP_UTF8, 0, module_name.data(), static_cast<int>(module_name.size()), &wide_name[0], wide_len);
-    
-    
+
         std::uintptr_t current = flink;
-    
+
         while (current && current != list_head)
         {
-    
             std::uintptr_t dll_base = 0;
             if (!read<std::uintptr_t>(current + 0x30, dll_base))
             {
                 break;
             }
-    
+
             USHORT name_length = 0;
-    
+
             if (!read<USHORT>(current + 0x58, name_length))
             {
                 break;
             }
-    
+
             std::uintptr_t name_buffer = 0;
-    
+
             if (!read<std::uintptr_t>(current + 0x60, name_buffer))
             {
                 break;
             }
-    
+
             if (name_buffer && name_length > 0)
             {
-    
                 const size_t max_chars = 255;
                 size_t wchar_count = name_length / sizeof(wchar_t);
-    
+
                 if (wchar_count > max_chars)
                 {
                     wchar_count = max_chars;
                 }
-    
+
                 std::wstring module_name_wide(wchar_count, L'\0');
                 SIZE_T bytes_read = 0;
-    
+
                 if (ReadProcessMemory(h, reinterpret_cast<LPCVOID>(name_buffer), &module_name_wide[0], wchar_count * sizeof(wchar_t), &bytes_read))
                 {
-    
                     if (_wcsicmp(module_name_wide.c_str(), wide_name.c_str()) == 0)
                     {
                         return {dll_base};
                     }
                 }
             }
-    
+
             if (!read<std::uintptr_t>(current, current))
             {
                 break;
             }
         }
-    
+
         return {0};
     }
 
@@ -283,6 +273,7 @@ namespace mm
         }
 
         std::uintptr_t data_ptr;
+
         if (str.length < 16)
         {
             data_ptr = address;
