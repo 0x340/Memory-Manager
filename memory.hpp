@@ -18,8 +18,8 @@
     SOFTWARE.
 */
 
-
 #pragma once
+
 #include <Windows.h>
 #include <TlHelp32.h>
 #include <Psapi.h>
@@ -29,15 +29,14 @@
 #include <memory>
 #include <format>
 
-
 using nt_read_fn  = NTSTATUS(WINAPI*)(HANDLE, PVOID, PVOID, SIZE_T, PSIZE_T);
 using nt_write_fn = NTSTATUS(WINAPI*)(HANDLE, PVOID, PVOID, SIZE_T, PSIZE_T);
 
 namespace mm
 {
-
     bool open_process(std::string_view process_name);
     void close_process();
+
     HANDLE get_process_handle(); // can be nullptr
 
     std::uintptr_t get_module_base(std::string_view module_name);
@@ -49,22 +48,19 @@ namespace mm
     nt_write_fn get_write_syscall();
 
     template<typename T>
-
     T read(std::uintptr_t address)
     {
         T val{};
         nt_read_fn read_fn = get_read_syscall();
         read_fn(get_process_handle(), reinterpret_cast<PVOID>(address), &val, sizeof(T), nullptr);
-        //
+
         return {val};
     }
 
     template<typename T>
-
     void write(std::uintptr_t address, T value)
     {
         nt_write_fn write_fn = get_write_syscall();
         write_fn(get_process_handle(), reinterpret_cast<PVOID>(address), &value, sizeof(T), nullptr);
     }
-
 } // mm
