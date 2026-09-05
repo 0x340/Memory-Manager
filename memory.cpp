@@ -148,18 +148,11 @@ namespace mm
 
     nt_read_fn get_read_syscall()
     {
-        if (!helper::g_read_syscall)
-            helper::g_read_syscall = helper::build_read_syscall();
-        return helper::g_read_syscall;
+        return {helper::g_read_syscall};
     }
 
     nt_write_fn get_write_syscall()
     {
-        if (!helper::g_write_syscall)
-        {
-             helper::g_write_syscall = helper::build_write_syscall();
-        }
-
         return {helper::g_write_syscall};
     }
 
