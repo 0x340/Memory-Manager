@@ -1,6 +1,6 @@
 # Memory Manager
 
-Its is currently **Windows 10 only** if you use any other version you have to update the syscalls for NT read & write memory. It reads and writes memory in an external process using raw syscall stubs instead of going through `ntdll`, which means it works even when `ntdll` is hooked. It also doesnt use `EnumProcessModules` to cuz the api can be hooked and that can result in detections
+Its is currently **Windows 10 only** if you use any other version you have to update the syscalls for `NtReadVirtualMemory` & `NtWriteVirtualMemory`. It reads and writes memory in an external process using raw syscall stubs instead of going through `ntdll`, which means it works even when `ntdll` is hooked. It also doesnt use `EnumProcessModules` to cuz the api can be hooked and that can result in detections
 
 
 ### Guide
