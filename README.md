@@ -2,7 +2,7 @@
 
 Its is currently **Windows 10 only** if you use any other version you have to update the syscalls for `NtReadVirtualMemory` & `NtWriteVirtualMemory`. It reads and writes memory in an external process using raw syscall stubs instead of going through `ntdll`, which means it works even when `ntdll` is hooked. It also doesnt use `EnumProcessModules` to cuz the api can be hooked and that can result in detections
 
-You can find a list to update the syscalls here: [Windows NT Syscall Table](https://j00ru.vexillium.org/syscalls/nt/64/)
+You can find a list to update the syscalls here: [Windows Syscall Table](https://j00ru.vexillium.org/syscalls/nt/64/)
 
 ### Guide
 ```cpp
