@@ -20,7 +20,7 @@ nt_read_fn mm::internal::build_read_syscall()
 
     std::memcpy(exec, stub.data(), stub.size());
     //
-    return reinterpret_cast<nt_read_fn>(exec);
+    return { reinterpret_cast<nt_read_fn>(exec) };
 }
 
 nt_write_fn mm::internal::build_write_syscall()
@@ -56,7 +56,7 @@ std::uintptr_t mm::internal::find_process_id(std::string_view process_name)
     //
     if (snap.get() == INVALID_HANDLE_VALUE)
     {
-        return 0;
+        return{ 0 };
     }
 
     if (Process32First(snap.get(), &entry))
@@ -65,7 +65,7 @@ std::uintptr_t mm::internal::find_process_id(std::string_view process_name)
         {
             if (_stricmp(entry.szExeFile, process_name.data()) == 0)
             {
-                return entry.th32ProcessID;
+                return { entry.th32ProcessID };
             }
 
         }
@@ -73,7 +73,7 @@ std::uintptr_t mm::internal::find_process_id(std::string_view process_name)
         while (Process32Next(snap.get(), &entry));
     }
     //
-    return 0; // returns 0 if not found
+    return{ 0 };
 }
 
 mm::internal::memory_manager::memory_manager()
@@ -84,7 +84,7 @@ mm::internal::memory_manager::memory_manager()
 
 mm::internal::memory_manager::~memory_manager()
 {
-    close(); // closes handle on exit
+    close(); // closes handle
 }
 
 bool mm::internal::memory_manager::open(std::string_view process_name)
@@ -93,12 +93,12 @@ bool mm::internal::memory_manager::open(std::string_view process_name)
     //
     if (!pid)
     {
-        return false; // returns true on success
+        return { false };
     }
     //
     proc_handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, static_cast<DWORD>(pid)); // full access
     //
-    return proc_handle != nullptr;
+    return { proc_handle != nullptr };
 }
 
 void mm::internal::memory_manager::close()
@@ -116,7 +116,7 @@ std::uintptr_t mm::internal::memory_manager::get_module_base(std::string_view mo
 {
     if (!proc_handle)
     {
-        return 0;
+        return { 0 };
     }
     //
     std::array<HMODULE, 1024> modules {};
@@ -124,7 +124,7 @@ std::uintptr_t mm::internal::memory_manager::get_module_base(std::string_view mo
     //
     if (!EnumProcessModules(proc_handle, modules.data(), sizeof(modules), &bytes_needed))
     {
-         return 0;
+         return { 0 };
     }
     //
     const std::size_t count = bytes_needed / sizeof(HMODULE);
@@ -143,7 +143,7 @@ std::string mm::internal::memory_manager::read_raw_string(std::uintptr_t address
     std::string result {};
     result.reserve(128);
     //
-    for (int i = 0; i < 200; ++i) // up to 200 chars
+    for (int i = 0; i < 200; ++i) // moree shhh
     {
         const char c = read<char>(address + i);
         //
@@ -154,12 +154,12 @@ std::string mm::internal::memory_manager::read_raw_string(std::uintptr_t address
         //
         result += c;
     }
-    return result;
+    return { result };
 }
 
 std::string mm::internal::memory_manager::read_string(std::uintptr_t address) const
 {
-    const bool is_heap = read<std::uintptr_t>(address + 0x18) >= 16u; // checks capacity via 0x18 and if >= 16 then its on the heap 
+    const bool is_heap = read<std::uintptr_t>(address + 0x18) >= 16u; // shghhhhh
     //
     return read_raw_string(is_heap ? read<std::uintptr_t>(address) : address);
 }
