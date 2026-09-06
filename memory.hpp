@@ -32,7 +32,7 @@
 using nt_read_fn  = NTSTATUS(WINAPI*)(HANDLE, PVOID, PVOID, SIZE_T, PSIZE_T);
 using nt_write_fn = NTSTATUS(WINAPI*)(HANDLE, PVOID, PVOID, SIZE_T, PSIZE_T);
 
-namespace mm
+namespace memory
 {
     bool open_process(std::string_view process_name);
     void close_process();
@@ -63,4 +63,4 @@ namespace mm
         nt_write_fn write_fn = get_write_syscall();
         write_fn(get_process_handle(), reinterpret_cast<PVOID>(address), &value, sizeof(T), nullptr);
     }
-} // mm
+} // memory
