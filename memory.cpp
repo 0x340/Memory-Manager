@@ -1,6 +1,5 @@
 #include "memory.hpp"
 
-#include <windows.h>
 #include <stdexcept>
 #include <winternl.h>
 #include <psapi.h>
