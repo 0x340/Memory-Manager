@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <vector>
 
-namespace mm
+namespace memory
 {
     namespace helper
     {
@@ -339,4 +339,4 @@ namespace mm
         write<std::size_t>(address + 0x18, write_len);
     }
 
-} // mm
+} // memory
