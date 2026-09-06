@@ -41,6 +41,10 @@ namespace memory
 
     std::uintptr_t get_module_base(std::string_view module_name);
 
+    bool query(std::uintptr_t address,void*buffer,std::size_t length)
+    bool protect(std::uintptr_t address,std::size_t size,unsigned long protect,unsigned long*old_protect)
+    void*allocate(std::uintptr_t address,std::size_t size,unsigned long type,unsigned long protect)
+
     std::string read_string(std::uintptr_t address);
     void write_string(std::uintptr_t address, std::string_view value);
 
@@ -63,4 +67,5 @@ namespace memory
         nt_write_fn write_fn = get_write_syscall();
         write_fn(get_process_handle(), reinterpret_cast<PVOID>(address), &value, sizeof(T), nullptr);
     }
+
 } // memory
