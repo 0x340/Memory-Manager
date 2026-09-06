@@ -8,7 +8,7 @@ You can find a list to update the syscalls here: [Windows Syscall Table](https:/
 ### Guide
 ```cpp
 #include "memory.hpp"
-#incldue "windows.h"
+#include "windows.h"
 
 int main()
 {
