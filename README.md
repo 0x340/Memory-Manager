@@ -10,27 +10,27 @@ You can find a list to update the syscalls here: [Windows Syscall Table](https:/
 
 int main()
 {
-    if (!mm::open_process("notepad.exe"))
+    if (!memory::open_process("notepad.exe"))
     {
         return {1}; // if the app is dead
     }
 
     // get the base address
-    uintptr_t base = mm::get_module_base("notepad.exe");
+    uintptr_t base = memory::get_module_base("notepad.exe");
 
     // read a value    
-    int value = mm::read<int>(base + 0x1234);
+    int value = memory::read<int>(base + 0x1234);
 
     // write a value
-    mm::write<int>(base + 0x1234, 42);
+    memory::write<int>(base + 0x1234, 42);
 
     // read a std::string
-    std::string text = mm::read_string(base + 0x5678);
+    std::string text = memory::read_string(base + 0x5678);
 
     // write a std::string
-    mm::write_string(base + 0x5678, "Hello, world!");
+    memory::write_string(base + 0x5678, "Hello, world!");
 
-    mm::close_process(); 
+    memory::close_process(); 
 
     return {0};
 }
