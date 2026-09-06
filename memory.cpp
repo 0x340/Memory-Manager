@@ -283,9 +283,9 @@ namespace memory
     {
         struct string_t
         {
-            std::array<unsigned char, 16> buffer;
-            std::size_t size;
-            std::size_t length;
+            std::array<unsigned char, 16> buffer;   // u8
+            std::size_t length;                     // u64
+            std::size_t capacity;                   // u64
         };
 
         string_t str = read<string_t>(address);
@@ -297,7 +297,7 @@ namespace memory
 
         std::uintptr_t data_ptr;
 
-        if (str.length < 16)
+        if (str.capacity < 16)
         {
             data_ptr = address;
         }
@@ -319,20 +319,20 @@ namespace memory
             return {};
         }
 
-        return result;
+        return {result};
     }
 
     void write_string(std::uintptr_t address, std::string_view value)
     {
-        std::size_t length = read<std::size_t>(address + 0x18);
-        std::size_t capacity = read<std::size_t>(address + 0x10);
+        std::size_t length = read<std::size_t>(address + 0x10);
+        std::size_t capacity = read<std::size_t>(address + 0x18);
 
         if (capacity == 0)
         {
             return;
         }
 
-        bool is_heap = (length >= 0x10);
+        bool is_heap = (capacity >= 16);
         std::uintptr_t target_ptr;
 
         if (is_heap)
@@ -349,7 +349,7 @@ namespace memory
             return;
         }
 
-        std::size_t write_len = std::min(value.size(), capacity - 1);
+        std::size_t write_len = std::min(value.size(), capacity);
 
         if (write_len > 0)
         {
@@ -359,7 +359,7 @@ namespace memory
         char null_char = '\0';
         WriteProcessMemory(get_process_handle(), (LPVOID)(target_ptr + write_len), &null_char, 1, nullptr);
 
-        write<std::size_t>(address + 0x18, write_len);
+        write<std::size_t>(address + 0x10, write_len);
     }
 
 } // memory
