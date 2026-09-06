@@ -142,11 +142,19 @@ namespace memory
 
     nt_read_fn get_read_syscall()
     {
+        if (!helper::g_read_syscall)
+        {
+            helper::g_read_syscall = helper::build_read_syscall();
+        }
         return {helper::g_read_syscall};
     }
 
     nt_write_fn get_write_syscall()
     {
+        if (!helper::g_write_syscall)
+        {
+            helper::g_write_syscall = helper::build_write_syscall();
+        }
         return {helper::g_write_syscall};
     }
 
@@ -316,7 +324,7 @@ namespace memory
 
     void write_string(std::uintptr_t address, std::string_view value)
     {
-        std::size_t length   = read<std::size_t>(address + 0x18);
+        std::size_t length = read<std::size_t>(address + 0x18);
         std::size_t capacity = read<std::size_t>(address + 0x10);
 
         if (capacity == 0)
