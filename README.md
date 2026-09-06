@@ -7,6 +7,7 @@ You can find a list to update the syscalls here: [Windows Syscall Table](https:/
 ### Guide
 ```cpp
 #include "memory.hpp"
+#incldue "windows.h"
 
 int main()
 {
@@ -23,6 +24,17 @@ int main()
 
     // write a value
     memory::write<int>(base + 0x1234, 42);
+
+    // query info about address
+    MEMORY_BASIC_INFORMATION mbi;
+    bool success = memory::query((uintptr_t)mem, &mbi, sizeof(mbi));
+
+    // change protection flag
+    DWORD old_prot;
+    bool ok = memory::protect((uintptr_t)mem, 4096, PAGE_READONLY, &old_prot);
+
+    // allocate memory
+    void* mem = memory::allocate(0x10000, 4096, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 
     // read a std::string
     std::string text = memory::read_string(base + 0x5678);
