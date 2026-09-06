@@ -256,6 +256,21 @@ namespace memory
         return {0};
     }
 
+    void*allocate(std::uintptr_t address,std::size_t size,unsigned long type,unsigned long protect)
+    {
+    	return {VirtualAlloc(reinterpret_cast<void*>(address),size,type,protect)};
+    }
+    
+    bool protect(std::uintptr_t address,std::size_t size,unsigned long protect,unsigned long*old_protect)
+    {
+    	return {VirtualProtect(reinterpret_cast<void*>(address),size,protect,old_protect)!=0};
+    }
+    
+    bool query(std::uintptr_t address,void*buffer,std::size_t length)
+    {
+    	return {VirtualQuery(reinterpret_cast<void*>(address),reinterpret_cast<MEMORY_BASIC_INFORMATION*>(buffer),length)!=0};
+    }
+    
     std::string read_string(std::uintptr_t address)
     {
         struct string_t
