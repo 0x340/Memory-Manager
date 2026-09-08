@@ -22,7 +22,6 @@
 
 #include <Windows.h>
 #include <TlHelp32.h>
-#include <Psapi.h>
 #include <string>
 #include <cstdint>
 #include <array>
