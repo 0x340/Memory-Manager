@@ -28,7 +28,6 @@
 #include <array>
 #include <memory>
 #include <format>
-#include <cstdint>
 
 using nt_read_fn = NTSTATUS(WINAPI*)(HANDLE, PVOID, PVOID, SIZE_T, PSIZE_T);
 using nt_write_fn = NTSTATUS(WINAPI*)(HANDLE, PVOID, PVOID, SIZE_T, PSIZE_T);
