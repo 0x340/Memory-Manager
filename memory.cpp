@@ -142,29 +142,20 @@ namespace memory
         return {true};
     }
 
-void close_process()
-{
-    if (helper::g_read_syscall)
-    {
-        VirtualFree(reinterpret_cast<LPVOID>(helper::g_read_syscall), 0, MEM_RELEASE);
-        helper::g_read_syscall = nullptr;
-    }
-
-    if (helper::g_write_syscall)
-    {
-        VirtualFree(reinterpret_cast<LPVOID>(helper::g_write_syscall), 0, MEM_RELEASE);
-        helper::g_write_syscall = nullptr;
-    }
-
-    if (helper::g_proc_handle)
-    {
-        CloseHandle(helper::g_proc_handle);
-        helper::g_proc_handle = nullptr;
-    }
-}
-
     void close_process()
     {
+        if (helper::g_read_syscall)
+        {
+            VirtualFree(reinterpret_cast<LPVOID>(helper::g_read_syscall), 0, MEM_RELEASE);
+            helper::g_read_syscall = nullptr;
+        }
+
+        if (helper::g_write_syscall)
+        {
+            VirtualFree(reinterpret_cast<LPVOID>(helper::g_write_syscall), 0, MEM_RELEASE);
+            helper::g_write_syscall = nullptr;
+        }
+
         if (helper::g_proc_handle)
         {
             CloseHandle(helper::g_proc_handle);
