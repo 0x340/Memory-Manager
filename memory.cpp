@@ -113,7 +113,7 @@ namespace memory
         close_process();
 
         const std::uintptr_t pid = helper::find_process_id(process_name);
-
+        
         if (!pid)
         {
             return {false};
@@ -121,8 +121,47 @@ namespace memory
 
         helper::g_proc_handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, static_cast<DWORD>(pid));
 
-        return {helper::g_proc_handle != nullptr};
+        if (!helper::g_proc_handle)
+        {
+            return {false};
+        }
+
+        try
+        {
+            helper::g_read_syscall = helper::build_read_syscall();
+            helper::g_write_syscall = helper::build_write_syscall();
+        }
+        catch (const std::runtime_error&)
+        {
+            // stub allocation failed
+            close_process();
+            //
+            return {false};
+        }
+
+        return {true};
     }
+
+void close_process()
+{
+    if (helper::g_read_syscall)
+    {
+        VirtualFree(reinterpret_cast<LPVOID>(helper::g_read_syscall), 0, MEM_RELEASE);
+        helper::g_read_syscall = nullptr;
+    }
+
+    if (helper::g_write_syscall)
+    {
+        VirtualFree(reinterpret_cast<LPVOID>(helper::g_write_syscall), 0, MEM_RELEASE);
+        helper::g_write_syscall = nullptr;
+    }
+
+    if (helper::g_proc_handle)
+    {
+        CloseHandle(helper::g_proc_handle);
+        helper::g_proc_handle = nullptr;
+    }
+}
 
     void close_process()
     {
@@ -159,46 +198,31 @@ namespace memory
     std::uintptr_t get_module_base(std::string_view module_name)
     {
         HANDLE h = get_process_handle();
-
         if (!h)
         {
             return {0};
         }
 
         std::uintptr_t peb = helper::get_peb();
-
         if (!peb)
         {
             return {0};
         }
 
-        std::uintptr_t ldr = 0;
-
-        if (!read<std::uintptr_t>(peb + 0x18, ldr))
-        {
-            return {0};
-        }
-
+        std::uintptr_t ldr = read<std::uintptr_t>(peb + 0x18);
         if (!ldr)
         {
             return {0};
         }
 
         std::uintptr_t list_head = ldr + 0x10;
-        std::uintptr_t flink = 0;
-
-        if (!read<std::uintptr_t>(list_head, flink))
-        {
-            return {0};
-        }
-
+        std::uintptr_t flink = read<std::uintptr_t>(list_head);
         if (!flink)
         {
             return {0};
         }
 
         int wide_len = MultiByteToWideChar(CP_UTF8, 0, module_name.data(), static_cast<int>(module_name.size()), nullptr, 0);
-
         if (wide_len == 0)
         {
             return {0};
@@ -208,34 +232,16 @@ namespace memory
         MultiByteToWideChar(CP_UTF8, 0, module_name.data(), static_cast<int>(module_name.size()), &wide_name[0], wide_len);
 
         std::uintptr_t current = flink;
-
         while (current && current != list_head)
         {
-            std::uintptr_t dll_base = 0;
-            if (!read<std::uintptr_t>(current + 0x30, dll_base))
-            {
-                break;
-            }
-
-            USHORT name_length = 0;
-
-            if (!read<USHORT>(current + 0x58, name_length))
-            {
-                break;
-            }
-
-            std::uintptr_t name_buffer = 0;
-
-            if (!read<std::uintptr_t>(current + 0x60, name_buffer))
-            {
-                break;
-            }
+            std::uintptr_t dll_base = read<std::uintptr_t>(current + 0x30);
+            USHORT name_length = read<USHORT>(current + 0x58);
+            std::uintptr_t name_buffer = read<std::uintptr_t>(current + 0x60);
 
             if (name_buffer && name_length > 0)
             {
                 const size_t max_chars = 255;
                 size_t wchar_count = name_length / sizeof(wchar_t);
-
                 if (wchar_count > max_chars)
                 {
                     wchar_count = max_chars;
@@ -243,7 +249,6 @@ namespace memory
 
                 std::wstring module_name_wide(wchar_count, L'\0');
                 SIZE_T bytes_read = 0;
-
                 if (ReadProcessMemory(h, reinterpret_cast<LPCVOID>(name_buffer), &module_name_wide[0], wchar_count * sizeof(wchar_t), &bytes_read))
                 {
                     if (_wcsicmp(module_name_wide.c_str(), wide_name.c_str()) == 0)
@@ -253,10 +258,7 @@ namespace memory
                 }
             }
 
-            if (!read<std::uintptr_t>(current, current))
-            {
-                break;
-            }
+            current = read<std::uintptr_t>(current);
         }
 
         return {0};
@@ -264,17 +266,17 @@ namespace memory
 
     void*allocate(std::uintptr_t address,std::size_t size,unsigned long type,unsigned long protect)
     {
-    	return {VirtualAlloc(reinterpret_cast<void*>(address),size,type,protect)};
+        return {VirtualAlloc(reinterpret_cast<void*>(address),size,type,protect)};
     }
     
     bool protect(std::uintptr_t address,std::size_t size,unsigned long protect,unsigned long*old_protect)
     {
-    	return {VirtualProtect(reinterpret_cast<void*>(address),size,protect,old_protect)!=0};
+        return {VirtualProtect(reinterpret_cast<void*>(address),size,protect,old_protect)!=0};
     }
     
     bool query(std::uintptr_t address,void*buffer,std::size_t length)
     {
-    	return {VirtualQuery(reinterpret_cast<void*>(address),reinterpret_cast<MEMORY_BASIC_INFORMATION*>(buffer),length)!=0};
+        return {VirtualQuery(reinterpret_cast<void*>(address),reinterpret_cast<MEMORY_BASIC_INFORMATION*>(buffer),length)!=0};
     }
     
     std::string read_string(std::uintptr_t address)
