@@ -2,10 +2,8 @@
 
 #include <stdexcept>
 #include <winternl.h>
-#include <psapi.h>
 #include <string>
 #include <cwctype>
-#include <cstring>
 #include <algorithm>
 #include <vector>
 
