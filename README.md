@@ -48,3 +48,7 @@ int main()
     return {0};
 }
 ```
+
+**Requirements**
+- Windows 10
+- c++ 20
