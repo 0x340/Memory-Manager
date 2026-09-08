@@ -30,12 +30,12 @@ int main()
     MEMORY_BASIC_INFORMATION mbi;
     bool success = memory::query((uintptr_t)mem, &mbi, sizeof(mbi));
 
+    // allocate memory
+    void* mem = memory::allocate(0x10000, 4096, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+
     // change protection flag
     DWORD old_prot;
     bool ok = memory::protect((uintptr_t)mem, 4096, PAGE_READONLY, &old_prot);
-
-    // allocate memory
-    void* mem = memory::allocate(0x10000, 4096, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 
     // read a std::string
     std::string text = memory::read_string(base + 0x5678);
