@@ -26,7 +26,7 @@ int main()
     // write a value
     memory::write<int>(base + 0x1234, 42);
 
-    // query info about address
+    // query info about a address
     MEMORY_BASIC_INFORMATION mbi;
     bool success = memory::query((uintptr_t)mem, &mbi, sizeof(mbi));
 
