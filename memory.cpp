@@ -172,7 +172,7 @@ namespace memory
             }
 
             std::memcpy(exec, stub.data(), stub.size());
-
+            //
             return {reinterpret_cast<nt_close_fn>(exec)};
         }
 
