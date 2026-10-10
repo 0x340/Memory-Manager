@@ -24,8 +24,6 @@
 #include <TlHelp32.h>
 #include <string>
 #include <cstdint>
-#include <array>
-#include <memory>
 #include <format>
 #include <string_view>
 
@@ -43,7 +41,7 @@ namespace memory
 
     bool query(std::uintptr_t address, MEMORY_BASIC_INFORMATION& out);
     bool protect(std::uintptr_t address,std::size_t size,unsigned long protect,unsigned long*old_protect);
-    void*allocate(std::uintptr_t address,std::size_t size,unsigned long type,unsigned long protect);
+    void*allocate(std::uintptr_t address, std::size_t size, unsigned long type, unsigned long new_protect);
 
     std::string read_string(std::uintptr_t address);
     void write_string(std::uintptr_t address, std::string_view value);
@@ -55,7 +53,28 @@ namespace memory
     bool read(std::uintptr_t address, T& out)
     {
         nt_read_fn read_fn = get_read_syscall();
+        
+        if (!read_fn || !get_process_handle())
+        {
+             return {false};
+        }
+        
         NTSTATUS status = read_fn(get_process_handle(), reinterpret_cast<PVOID>(address), &out, sizeof(T), nullptr);
+        //
+        return {NT_SUCCESS(status)};
+    }
+    
+    template<typename T>
+    bool write(std::uintptr_t address, const T& value)
+    {
+        nt_write_fn write_fn = get_write_syscall();
+        
+        if (!write_fn || !get_process_handle())
+        {
+             return {false};
+        }
+        
+        NTSTATUS status = write_fn(get_process_handle(), reinterpret_cast<PVOID>(address), const_cast<T*>(&value), sizeof(T), nullptr);
         //
         return {NT_SUCCESS(status)};
     }
@@ -67,13 +86,6 @@ namespace memory
         read(address, val);
         //
         return {val};
-    }
-
-    template<typename T>
-    void write(std::uintptr_t address, T value)
-    {
-        nt_write_fn write_fn = get_write_syscall();
-        write_fn(get_process_handle(), reinterpret_cast<PVOID>(address), &value, sizeof(T), nullptr);
     }
 
 } // namespace memory
