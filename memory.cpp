@@ -376,7 +376,7 @@ namespace memory
 
                 ptr += spi->NextEntryOffset;
             }
-
+            //
             return {0};
         }
 
