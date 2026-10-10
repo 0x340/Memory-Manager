@@ -14,7 +14,7 @@ Since Im going for stealth, none of the often monitored & hooked APIs are being 
 - ``VirtualQueryEx``
 - ``VirtualProtectEx``
 - ``VirtualAllocEx``
-- ``ReadProcessMemory``
+- ``ReadProcessMemory`` 
 - ``WriteProcessMemory``
 - ``Process32First`` / ``Process32Next``
 
