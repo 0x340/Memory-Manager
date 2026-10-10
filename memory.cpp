@@ -9,6 +9,8 @@
 
 namespace memory
 {
+
+
     namespace helper
     {
         HANDLE g_proc_handle = nullptr;
@@ -96,7 +98,7 @@ namespace memory
             {
                 do
                 {
-                    if (_stricmp(entry.szExeFile, process_name.data()) == 0)
+                    if (_stricmp(entry.szExeFile, std::string(process_name).c_str()) == 0)
                     {
                         return {entry.th32ProcessID};
                     }
@@ -106,7 +108,8 @@ namespace memory
 
             return {0};
         }
-    } // helper
+
+    } // namespace helper
 
     bool open_process(std::string_view process_name)
     {
@@ -133,7 +136,6 @@ namespace memory
         }
         catch (const std::runtime_error&)
         {
-            // stub allocation failed
             close_process();
             //
             return {false};
@@ -255,29 +257,35 @@ namespace memory
         return {0};
     }
 
-    void*allocate(std::uintptr_t address,std::size_t size,unsigned long type,unsigned long protect)
+    void* allocate(std::uintptr_t address, std::size_t size, unsigned long type, unsigned long protect)
     {
-        return {VirtualAlloc(reinterpret_cast<void*>(address),size,type,protect)};
+        if (!helper::g_proc_handle)
+        {
+            return {nullptr};
+        }
+        return {VirtualAllocEx(helper::g_proc_handle, reinterpret_cast<void*>(address), size, type, protect)};
     }
-    
-    bool protect(std::uintptr_t address,std::size_t size,unsigned long protect,unsigned long*old_protect)
+
+    bool protect(std::uintptr_t address, std::size_t size, unsigned long new_protect, unsigned long* old_protect)
     {
-        return {VirtualProtect(reinterpret_cast<void*>(address),size,protect,old_protect)!=0};
+        if (!helper::g_proc_handle)
+        {
+            return {false};
+        }
+        return {VirtualProtectEx(helper::g_proc_handle, reinterpret_cast<void*>(address), size, new_protect, old_protect) != 0};
     }
-    
-    bool query(std::uintptr_t address,void*buffer,std::size_t length)
+
+    bool query(std::uintptr_t address, MEMORY_BASIC_INFORMATION& out)
     {
-        return {VirtualQuery(reinterpret_cast<void*>(address),reinterpret_cast<MEMORY_BASIC_INFORMATION*>(buffer),length)!=0};
+        if (!helper::g_proc_handle)
+        {
+            return {false};
+        }
+        return {VirtualQueryEx(helper::g_proc_handle, reinterpret_cast<void*>(address), &out, sizeof(out)) != 0};
     }
-    
+
     std::string read_string(std::uintptr_t address)
     {
-        struct string_t
-        {
-            std::array<unsigned char, 16> buffer;   // u8
-            std::size_t length;                     // u64
-            std::size_t capacity;                   // u64
-        };
 
         string_t str = read<string_t>(address);
 
@@ -353,4 +361,4 @@ namespace memory
         write<std::size_t>(address + 0x10, write_len);
     }
 
-} // memory
+} // namespace memory
