@@ -40,7 +40,7 @@ namespace memory
 
     std::uintptr_t get_module_base(std::string_view module_name);
 
-    bool query(std::uintptr_t address, MEMORY_BASIC_INFORMATION& out)
+    bool query(std::uintptr_t address, MEMORY_BASIC_INFORMATION& out);
     bool protect(std::uintptr_t address,std::size_t size,unsigned long protect,unsigned long*old_protect);
     void*allocate(std::uintptr_t address,std::size_t size,unsigned long type,unsigned long protect);
 
