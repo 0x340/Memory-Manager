@@ -9,8 +9,6 @@
 
 namespace memory
 {
-
-
     namespace helper
     {
         HANDLE g_proc_handle = nullptr;
