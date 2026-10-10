@@ -52,5 +52,4 @@ int main()
 **Requirements**
 - Windows 10 x64
 - std:c++ 20
-- MSVC v143
 - Administrator
