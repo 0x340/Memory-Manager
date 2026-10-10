@@ -5,7 +5,7 @@ You can find a table to update the syscalls here: [Windows Syscall Table](https:
 
 Since Im going for stealth, none of the often monitored & hooked APIs are being used, insted its using the raw stub syscall for each.
 
-APIs Im avoiding
+**APIs Im avoiding**
 - ``OpenProcess``
 - ``CloseHandle``
 - ``EnumProcessModules`` / ``EnumProcessModulesEx``
