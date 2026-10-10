@@ -18,7 +18,7 @@ Since Im going for stealth, none of the often monitored & hooked APIs are being 
 - ``WriteProcessMemory``
 - ``Process32First`` / ``Process32Next``
 
-### Guide
+### Example
 ```cpp
 #include "memory.hpp"
 #include "windows.h"
