@@ -8,15 +8,15 @@ Since Im going for stealth, none of the often monitored & hooked APIs are being 
 APIs Im avoiding
 - ``OpenProcess``
 - ``CloseHandle``
-- ``EnumProcessModules / EnumProcessModulesEx``
-- ``GetModuleBaseName / GetModuleFileNameEx``
+- ``EnumProcessModules`` / ``EnumProcessModulesEx``
+- ``GetModuleBaseName`` / ``GetModuleFileNameEx``
 - ``CreateToolhelp32Snapshot``
 - ``VirtualQueryEx``
 - ``VirtualProtectEx``
 - ``VirtualAllocEx``
 - ``ReadProcessMemory``
 - ``WriteProcessMemory``
-- ``Process32First / Process32Next``
+- ``Process32First`` / ``Process32Next``
 
 ### Guide
 ```cpp
