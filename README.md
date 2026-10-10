@@ -1,7 +1,7 @@
 # Memory Manager
 
 It's currently **Windows 10 only** if you use anything else you have to update the syscalls for `NtReadVirtualMemory` & `NtWriteVirtualMemory`. It reads & writes memory in an process using raw syscall instead of going through `ntdll` which means it works when `ntdll` is hooked and being monitored.
-It also doesnt use `EnumProcessModules` too cuz the api is also often monitored and since we are going for stealth here.
+It also doesnt use `EnumProcessModules` too cuz the api is also often monitored and since the goal is stealth here.
 
 You can find a table to update the syscalls here: [Windows Syscall Table](https://j00ru.vexillium.org/syscalls/nt/64/)
 
