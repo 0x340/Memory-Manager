@@ -19,7 +19,7 @@ namespace memory
         using nt_allocate_virtual_fn = NTSTATUS(WINAPI*)(HANDLE, PVOID*, ULONG_PTR, PSIZE_T, ULONG, ULONG);
         using nt_protect_virtual_fn = NTSTATUS(WINAPI*)(HANDLE, PVOID*, PSIZE_T, ULONG, PULONG);
         using nt_query_virtual_fn = NTSTATUS(WINAPI*)(HANDLE, PVOID, ULONG, PVOID, SIZE_T, PSIZE_T);
-        using nt_query_info_process_fn NTSTATUS = NTSTATUS(WINAPI*)(HANDLE, ULONG, PVOID, ULONG, PULONG);
+        using nt_query_info_process_fn = NTSTATUS(WINAPI*)(HANDLE, ULONG, PVOID, ULONG, PULONG);
         using nt_query_system_info_fn = NTSTATUS(WINAPI*)(ULONG, PVOID, ULONG, PULONG);
 
         struct object_attributes_t
