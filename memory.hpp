@@ -33,6 +33,13 @@ using nt_write_fn = NTSTATUS(WINAPI*)(HANDLE, PVOID, PVOID, SIZE_T, PSIZE_T);
 
 namespace memory
 {
+    struct string_t
+    {
+        std::array<unsigned char, 16> buffer;   // u8
+        std::size_t length;                     // u64
+        std::size_t capacity;                   // u64
+    };
+
     bool open_process(std::string_view process_name);
     void close_process();
 
@@ -40,7 +47,7 @@ namespace memory
 
     std::uintptr_t get_module_base(std::string_view module_name);
 
-    bool query(std::uintptr_t address,void*buffer,std::size_t length);
+    bool query(std::uintptr_t address, MEMORY_BASIC_INFORMATION& out)
     bool protect(std::uintptr_t address,std::size_t size,unsigned long protect,unsigned long*old_protect);
     void*allocate(std::uintptr_t address,std::size_t size,unsigned long type,unsigned long protect);
 
@@ -75,4 +82,4 @@ namespace memory
         write_fn(get_process_handle(), reinterpret_cast<PVOID>(address), &value, sizeof(T), nullptr);
     }
 
-} // memory
+} // namespace memory
