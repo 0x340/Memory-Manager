@@ -33,13 +33,6 @@ using nt_write_fn = NTSTATUS(WINAPI*)(HANDLE, PVOID, PVOID, SIZE_T, PSIZE_T);
 
 namespace memory
 {
-    struct string_t
-    {
-        std::array<unsigned char, 16> buffer;   // u8
-        std::size_t length;                     // u64
-        std::size_t capacity;                   // u64
-    };
-
     bool open_process(std::string_view process_name);
     void close_process();
 
