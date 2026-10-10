@@ -580,23 +580,23 @@ namespace memory
         return {0};
     }
 
-    void* allocate(std::uintptr_t address, std::size_t size, unsigned long type, unsigned long protect)
+    void* allocate(std::uintptr_t address, std::size_t size, unsigned long type, unsigned long new_protect)
     {
         if (!helper::g_proc_handle || !helper::g_allocate_virtual_syscall)
         {
             return {nullptr};
         }
-
+    
         PVOID base = reinterpret_cast<PVOID>(address);
         SIZE_T region_size = size;
-
-        NTSTATUS status = helper::g_allocate_virtual_syscall(helper::g_proc_handle, &base, 0, &region_size, type, protect);
-
+    
+        NTSTATUS status = helper::g_allocate_virtual_syscall(helper::g_proc_handle, &base, 0, &region_size, type, new_protect);
+    
         if (!NT_SUCCESS(status))
         {
             return {nullptr};
         }
-
+    
         return {base};
     }
 
