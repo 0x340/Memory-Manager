@@ -1,7 +1,7 @@
 # Memory Manager
 
 It's currently **Windows 10 only** if you use anything else you have to update the syscalls used in the code.
-You can find a table to update the syscalls here: [Windows Syscall Table](https://j00ru.vexillium.org/syscalls/nt/64/)
+You can find a table to update the syscalls here: [Syscall Table](https://j00ru.vexillium.org/syscalls/nt/64/)
 
 Since Im going for stealth, none of the often monitored & hooked APIs are being used, insted its using the raw stub syscall for each.
 
