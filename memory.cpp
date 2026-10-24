@@ -14,29 +14,18 @@ namespace memory
 {
     namespace helper
     {
-        using nt_open_process_fn = NTSTATUS(WINAPI*)(PHANDLE, ACCESS_MASK, PVOID, PVOID);
-        using nt_close_fn = NTSTATUS(WINAPI*)(HANDLE);
-        using nt_allocate_virtual_fn = NTSTATUS(WINAPI*)(HANDLE, PVOID*, ULONG_PTR, PSIZE_T, ULONG, ULONG);
-        using nt_protect_virtual_fn = NTSTATUS(WINAPI*)(HANDLE, PVOID*, PSIZE_T, ULONG, PULONG);
-        using nt_query_virtual_fn = NTSTATUS(WINAPI*)(HANDLE, PVOID, ULONG, PVOID, SIZE_T, PSIZE_T);
-        using nt_query_info_process_fn = NTSTATUS(WINAPI*)(HANDLE, ULONG, PVOID, ULONG, PULONG);
-        using nt_query_system_info_fn = NTSTATUS(WINAPI*)(ULONG, PVOID, ULONG, PULONG);
-
         struct object_attributes_t
         {
             ULONG Length;
             HANDLE RootDirectory;
             PVOID ObjectName;
-            ULONG Attributes;
-            PVOID SecurityDescriptor;
-            PVOID SecurityQualityOfService;
         };
 
         struct string_t
         {
-            std::array<unsigned char, 16> buffer;
-            std::size_t length;
-            std::size_t capacity;
+            std::array<unsigned char, 16> Buffer;
+            std::size_t Length;
+            std::size_t Capacity;
         };
 
         struct system_process_info_t
@@ -53,40 +42,18 @@ namespace memory
             UNICODE_STRING   ImageName;
             KPRIORITY        BasePriority;
             HANDLE           UniqueProcessId;
-            HANDLE           InheritedFromUniqueProcessId;
-            ULONG            HandleCount;
-            ULONG            SessionId;
-            ULONG_PTR        UniqueProcessKey;
-            SIZE_T           PeakVirtualSize;
-            SIZE_T           VirtualSize;
-            ULONG            PageFaultCount;
-            SIZE_T           PeakWorkingSetSize;
-            SIZE_T           WorkingSetSize;
-            SIZE_T           QuotaPeakPagedPoolUsage;
-            SIZE_T           QuotaPagedPoolUsage;
-            SIZE_T           QuotaPeakNonPagedPoolUsage;
-            SIZE_T           QuotaNonPagedPoolUsage;
-            SIZE_T           PagefileUsage;
-            SIZE_T           PeakPagefileUsage;
-            SIZE_T           PrivatePageCount;
-            LARGE_INTEGER    ReadOperationCount;
-            LARGE_INTEGER    WriteOperationCount;
-            LARGE_INTEGER    OtherOperationCount;
-            LARGE_INTEGER    ReadTransferCount;
-            LARGE_INTEGER    WriteTransferCount;
-            LARGE_INTEGER    OtherTransferCount;
         };
 
         HANDLE g_proc_handle = nullptr;
         nt_read_fn g_read_syscall = nullptr;
         nt_write_fn g_write_syscall = nullptr;
-        nt_open_process_fn g_open_process_syscall = nullptr;
-        nt_close_fn g_close_syscall = nullptr;
-        nt_allocate_virtual_fn g_allocate_virtual_syscall = nullptr;
-        nt_protect_virtual_fn g_protect_virtual_syscall = nullptr;
-        nt_query_virtual_fn g_query_virtual_syscall = nullptr;
-        nt_query_info_process_fn g_query_info_process_syscall = nullptr;
-        nt_query_system_info_fn g_query_system_info_syscall = nullptr;
+        NTSTATUS(WINAPI* g_open_process_syscall)(PHANDLE, ACCESS_MASK, PVOID, PVOID) = nullptr;
+        NTSTATUS(WINAPI* g_close_syscall)(HANDLE) = nullptr;
+        NTSTATUS(WINAPI* g_allocate_virtual_syscall)(HANDLE, PVOID*, ULONG_PTR, PSIZE_T, ULONG, ULONG) = nullptr;
+        NTSTATUS(WINAPI* g_protect_virtual_syscall)(HANDLE, PVOID*, PSIZE_T, ULONG, PULONG) = nullptr;
+        NTSTATUS(WINAPI* g_query_virtual_syscall)(HANDLE, PVOID, ULONG, PVOID, SIZE_T, PSIZE_T) = nullptr;
+        NTSTATUS(WINAPI* g_query_info_process_syscall)(HANDLE, ULONG, PVOID, ULONG, PULONG) = nullptr;
+        NTSTATUS(WINAPI* g_query_system_info_syscall)(ULONG, PVOID, ULONG, PULONG) = nullptr;
 
         nt_read_fn build_read_syscall()
         {
@@ -132,7 +99,7 @@ namespace memory
             return {reinterpret_cast<nt_write_fn>(exec)};
         }
 
-        nt_open_process_fn build_open_process_syscall()
+        NTSTATUS(WINAPI* build_open_process_syscall())(PHANDLE, ACCESS_MASK, PVOID, PVOID)
         {
             static constexpr std::array<std::uint8_t, 11> stub =
             {
@@ -151,10 +118,10 @@ namespace memory
 
             std::memcpy(exec, stub.data(), stub.size());
 
-            return {reinterpret_cast<nt_open_process_fn>(exec)};
+            return {reinterpret_cast<NTSTATUS(WINAPI*)(PHANDLE, ACCESS_MASK, PVOID, PVOID)>(exec)};
         }
 
-        nt_close_fn build_close_syscall()
+        NTSTATUS(WINAPI* build_close_syscall())(HANDLE)
         {
             static constexpr std::array<std::uint8_t, 11> stub =
             {
@@ -173,10 +140,10 @@ namespace memory
 
             std::memcpy(exec, stub.data(), stub.size());
             //
-            return {reinterpret_cast<nt_close_fn>(exec)};
+            return {reinterpret_cast<NTSTATUS(WINAPI*)(HANDLE)>(exec)};
         }
 
-        nt_allocate_virtual_fn build_allocate_virtual_syscall()
+        NTSTATUS(WINAPI* build_allocate_virtual_syscall())(HANDLE, PVOID*, ULONG_PTR, PSIZE_T, ULONG, ULONG)
         {
             static constexpr std::array<std::uint8_t, 11> stub =
             {
@@ -195,10 +162,10 @@ namespace memory
 
             std::memcpy(exec, stub.data(), stub.size());
 
-            return {reinterpret_cast<nt_allocate_virtual_fn>(exec)};
+            return {reinterpret_cast<NTSTATUS(WINAPI*)(HANDLE, PVOID*, ULONG_PTR, PSIZE_T, ULONG, ULONG)>(exec)};
         }
 
-        nt_protect_virtual_fn build_protect_virtual_syscall()
+        NTSTATUS(WINAPI* build_protect_virtual_syscall())(HANDLE, PVOID*, PSIZE_T, ULONG, PULONG)
         {
             static constexpr std::array<std::uint8_t, 11> stub =
             {
@@ -217,10 +184,10 @@ namespace memory
 
             std::memcpy(exec, stub.data(), stub.size());
 
-            return {reinterpret_cast<nt_protect_virtual_fn>(exec)};
+            return {reinterpret_cast<NTSTATUS(WINAPI*)(HANDLE, PVOID*, PSIZE_T, ULONG, PULONG)>(exec)};
         }
 
-        nt_query_virtual_fn build_query_virtual_syscall()
+        NTSTATUS(WINAPI* build_query_virtual_syscall())(HANDLE, PVOID, ULONG, PVOID, SIZE_T, PSIZE_T)
         {
             static constexpr std::array<std::uint8_t, 11> stub =
             {
@@ -239,10 +206,10 @@ namespace memory
 
             std::memcpy(exec, stub.data(), stub.size());
 
-            return {reinterpret_cast<nt_query_virtual_fn>(exec)};
+            return {reinterpret_cast<NTSTATUS(WINAPI*)(HANDLE, PVOID, ULONG, PVOID, SIZE_T, PSIZE_T)>(exec)};
         }
 
-        nt_query_info_process_fn build_query_info_process_syscall()
+        NTSTATUS(WINAPI* build_query_info_process_syscall())(HANDLE, ULONG, PVOID, ULONG, PULONG)
         {
             static constexpr std::array<std::uint8_t, 11> stub =
             {
@@ -261,10 +228,10 @@ namespace memory
 
             std::memcpy(exec, stub.data(), stub.size());
 
-            return {reinterpret_cast<nt_query_info_process_fn>(exec)};
+            return {reinterpret_cast<NTSTATUS(WINAPI*)(HANDLE, ULONG, PVOID, ULONG, PULONG)>(exec)};
         }
 
-        nt_query_system_info_fn build_query_system_info_syscall()
+        NTSTATUS(WINAPI* build_query_system_info_syscall())(ULONG, PVOID, ULONG, PULONG)
         {
             static constexpr std::array<std::uint8_t, 11> stub =
             {
@@ -283,7 +250,7 @@ namespace memory
 
             std::memcpy(exec, stub.data(), stub.size());
 
-            return {reinterpret_cast<nt_query_system_info_fn>(exec)};
+            return {reinterpret_cast<NTSTATUS(WINAPI*)(ULONG, PVOID, ULONG, PULONG)>(exec)};
         }
 
         void init_syscalls() // build all the calls
@@ -648,20 +615,20 @@ namespace memory
 
         string_t str = read<string_t>(address);
 
-        if (str.length == 0)
+        if (str.Length == 0)
         {
             return {};
         }
 
         std::uintptr_t data_ptr;
 
-        if (str.capacity < 16)
+        if (str.Capacity < 16)
         {
             data_ptr = address;
         }
         else
         {
-            std::memcpy(&data_ptr, str.buffer.data(), sizeof(data_ptr));
+            std::memcpy(&data_ptr, str.Buffer.data(), sizeof(data_ptr));
 
             if (!data_ptr)
             {
@@ -670,10 +637,10 @@ namespace memory
         }
 
         std::string result;
-        result.resize(str.length);
+        result.resize(str.Length);
 
         SIZE_T bytes_read = 0;
-        NTSTATUS status = helper::g_read_syscall(helper::g_proc_handle, reinterpret_cast<PVOID>(data_ptr), result.data(), str.length, &bytes_read);
+        NTSTATUS status = helper::g_read_syscall(helper::g_proc_handle, reinterpret_cast<PVOID>(data_ptr), result.data(), str.Length, &bytes_read);
 
         if (!NT_SUCCESS(status))
         {
@@ -692,20 +659,20 @@ namespace memory
 
         string_t str = read<string_t>(address);
 
-        if (str.capacity == 0)
+        if (str.Capacity == 0)
         {
             return;
         }
 
         std::uintptr_t target_ptr;
 
-        if (str.capacity < 16)
+        if (str.Capacity < 16)
         {
             target_ptr = address;
         }
         else
         {
-            std::memcpy(&target_ptr, str.buffer.data(), sizeof(target_ptr));
+            std::memcpy(&target_ptr, str.Buffer.data(), sizeof(target_ptr));
 
             if (!target_ptr)
             {
@@ -713,7 +680,7 @@ namespace memory
             }
         }
 
-        std::size_t write_len = std::min(value.size(), str.capacity);
+        std::size_t write_len = std::min(value.size(), str.Capacity);
 
         if (write_len > 0)
         {
