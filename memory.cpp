@@ -7,6 +7,7 @@
 #include <cwchar>
 #include <cwctype>
 #include <cstring>
+#include <array>
 #include <algorithm>
 #include <vector>
 
@@ -73,7 +74,7 @@ namespace memory
             }
 
             std::memcpy(exec, stub.data(), stub.size());
-
+            //
             return {reinterpret_cast<nt_read_fn>(exec)};
         }
 
@@ -95,7 +96,7 @@ namespace memory
             }
 
             std::memcpy(exec, stub.data(), stub.size());
-
+            //
             return {reinterpret_cast<nt_write_fn>(exec)};
         }
 
@@ -117,7 +118,7 @@ namespace memory
             }
 
             std::memcpy(exec, stub.data(), stub.size());
-
+            //
             return {reinterpret_cast<NTSTATUS(WINAPI*)(PHANDLE, ACCESS_MASK, PVOID, PVOID)>(exec)};
         }
 
@@ -161,7 +162,7 @@ namespace memory
             }
 
             std::memcpy(exec, stub.data(), stub.size());
-
+            //
             return {reinterpret_cast<NTSTATUS(WINAPI*)(HANDLE, PVOID*, ULONG_PTR, PSIZE_T, ULONG, ULONG)>(exec)};
         }
 
@@ -183,7 +184,7 @@ namespace memory
             }
 
             std::memcpy(exec, stub.data(), stub.size());
-
+            //
             return {reinterpret_cast<NTSTATUS(WINAPI*)(HANDLE, PVOID*, PSIZE_T, ULONG, PULONG)>(exec)};
         }
 
@@ -205,7 +206,7 @@ namespace memory
             }
 
             std::memcpy(exec, stub.data(), stub.size());
-
+            //
             return {reinterpret_cast<NTSTATUS(WINAPI*)(HANDLE, PVOID, ULONG, PVOID, SIZE_T, PSIZE_T)>(exec)};
         }
 
@@ -227,7 +228,7 @@ namespace memory
             }
 
             std::memcpy(exec, stub.data(), stub.size());
-
+            //
             return {reinterpret_cast<NTSTATUS(WINAPI*)(HANDLE, ULONG, PVOID, ULONG, PULONG)>(exec)};
         }
 
@@ -249,7 +250,7 @@ namespace memory
             }
 
             std::memcpy(exec, stub.data(), stub.size());
-
+            //
             return {reinterpret_cast<NTSTATUS(WINAPI*)(ULONG, PVOID, ULONG, PULONG)>(exec)};
         }
 
@@ -283,7 +284,7 @@ namespace memory
             {
                 return {0};
             }
-
+            //
             return {reinterpret_cast<std::uintptr_t>(pbi.PebBaseAddress)};
         }
 
@@ -309,7 +310,7 @@ namespace memory
             ULONG return_len = 0;
             NTSTATUS status = 0;
 
-            while ((status = g_query_system_info_syscall(5, buffer.data(), size, &return_len)) == 0xC0000004) // 5 -> SystemProcessInformation
+            while ((status = g_query_system_info_syscall(5, buffer.data(), size, &return_len)) == (NTSTATUS)0xC0000004) // 5 -> SystemProcessInformation
             {
                 size = return_len + 0x1000;
                 buffer.resize(size);
@@ -360,6 +361,7 @@ namespace memory
         catch (const std::runtime_error&)
         {
             close_process();
+            //
             return {false};
         }
 
@@ -377,7 +379,7 @@ namespace memory
 
         CLIENT_ID cid{};
         cid.UniqueProcess = reinterpret_cast<HANDLE>(pid);
-        cid.UniqueThread  = nullptr;
+        cid.UniqueThread = nullptr;
 
         HANDLE handle = nullptr;
         NTSTATUS status = helper::g_open_process_syscall(&handle, PROCESS_ALL_ACCESS, &oa, &cid);
@@ -385,11 +387,12 @@ namespace memory
         if (!NT_SUCCESS(status) || !handle)
         {
             close_process();
+            //
             return {false};
         }
 
         helper::g_proc_handle = handle;
-
+        //
         return {true};
     }
 
@@ -485,14 +488,14 @@ namespace memory
             return {0};
         }
 
-        std::uintptr_t ldr = read<std::uintptr_t>(peb + 0x18);
+        std::uintptr_t ldr = read<std::uintptr_t>(peb + 0x18); // pointer to PEB_LDR_DATA
 
         if (!ldr)
         {
             return {0};
         }
 
-        std::uintptr_t list_head = ldr + 0x10; // Ldr -> InMemoryOrderModuleList
+        std::uintptr_t list_head = ldr + 0x10; // -> InMemoryOrderModuleList
         std::uintptr_t flink = read<std::uintptr_t>(list_head);
 
         if (!flink)
@@ -514,9 +517,9 @@ namespace memory
 
         while (current && current != list_head)
         {
-            std::uintptr_t dll_base = read<std::uintptr_t>(current + 0x30);     // DR_DATA_TABLE_ENTRY -> BaseDll
+            std::uintptr_t dll_base = read<std::uintptr_t>(current + 0x30);     // DR_DATA_TABLE_ENTRY -> DllBase
             USHORT name_length = read<USHORT>(current + 0x58);                  // -> BaseDllName.Length
-            std::uintptr_t name_buffer = read<std::uintptr_t>(current + 0x60);  // ->BaseDllName.Buffer
+            std::uintptr_t name_buffer = read<std::uintptr_t>(current + 0x60);  // -> BaseDllName.Buffer
 
             if (name_buffer && name_length > 0)
             {
@@ -543,7 +546,7 @@ namespace memory
 
             current = read<std::uintptr_t>(current);
         }
-
+        //
         return {0};
     }
 
@@ -563,7 +566,7 @@ namespace memory
         {
             return {nullptr};
         }
-    
+        //
         return {base};
     }
 
@@ -589,7 +592,7 @@ namespace memory
         {
             *old_protect = old;
         }
-
+        //
         return {true};
     }
 
@@ -602,7 +605,7 @@ namespace memory
 
         SIZE_T return_len = 0;
         NTSTATUS status = helper::g_query_virtual_syscall(helper::g_proc_handle, reinterpret_cast<PVOID>(address), 0, &out, sizeof(out), &return_len);
-
+        //
         return {NT_SUCCESS(status)};
     }
 
@@ -646,7 +649,7 @@ namespace memory
         {
             return {};
         }
-
+        //
         return {result};
     }
 
@@ -691,7 +694,7 @@ namespace memory
         char null_char = '\0';
         helper::g_write_syscall(helper::g_proc_handle, reinterpret_cast<PVOID>(target_ptr + write_len), &null_char, 1, nullptr);
 
-        write<std::size_t>(address + 0x10, write_len);
+        write<std::size_t>(address + 0x10, write_len); // length
     }
 
 } // namespace memory
